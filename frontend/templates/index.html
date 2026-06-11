@@ -57,8 +57,11 @@
     <div class="sidebar">
       <h2>Upload Paper</h2>
       <div class="upload-area">
-        <input type="file" id="pdfInput" accept=".pdf" />
+        <input type="file" id="pdfInput" accept=".pdf" onchange="showSelectedFile()" />
         <label for="pdfInput">📄 Click to select a PDF</label>
+      </div>
+      <div id="selectedFile" style="display:none; font-size:0.8rem; color:#7c6af7; padding: 6px 4px;">
+        📎 <span id="selectedFileName"></span>
       </div>
       <button class="upload-btn" onclick="uploadPDF()">Index Paper</button>
       <div id="paperInfo" style="display:none" class="paper-tag">
@@ -100,6 +103,16 @@
       setStatus(`✅ Indexed ${data.chunks_indexed} chunks from "${data.filename}"`);
     }
 
+    function showSelectedFile() {
+        const input = document.getElementById("pdfInput");
+        const nameDisplay = document.getElementById("selectedFileName");
+        const fileDiv = document.getElementById("selectedFile");
+        if (input.files[0]) {
+            nameDisplay.textContent = input.files[0].name;
+            fileDiv.style.display = "block";
+            setStatus("Click 'Index Paper' to begin.");
+        }
+    }
     async function askQuestion() {
       const input = document.getElementById("questionInput");
       const question = input.value.trim();

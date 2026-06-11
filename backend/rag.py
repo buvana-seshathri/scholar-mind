@@ -1,7 +1,8 @@
 from langchain_community.vectorstores import FAISS
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
-from gemini import get_chat_model, get_embeddings
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+
+from llm_client import get_chat_model, get_embeddings
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,39 +23,45 @@ Answer with citations:
 
 def get_answer(paper_id: str, question: str) -> dict:
     save_path = os.path.join(VECTORSTORE_PATH, paper_id)
+
     embeddings = get_embeddings()
 
     vectorstore = FAISS.load_local(
-        save_path, embeddings, allow_dangerous_deserialization=True
+        save_path,
+        embeddings,
+        allow_dangerous_deserialization=True
     )
+
     retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+
+    llm = get_chat_model()
 
     prompt = PromptTemplate(
         template=PROMPT_TEMPLATE,
         input_variables=["context", "question"]
     )
 
-    llm = get_chat_model()
+    # 🔥 manual retrieval step (replaces RetrievalQA)
+    docs = retriever.invoke(question)
 
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        retriever=retriever,
-        chain_type="stuff",
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": prompt}
-    )
+    context = "\n\n".join([d.page_content for d in docs])
 
-    result = qa_chain.invoke({"query": question})
+    chain = prompt | llm
+
+    result = chain.invoke({
+        "context": context,
+        "question": question
+    })
 
     sources = [
         {
             "page": doc.metadata.get("page", "?"),
             "snippet": doc.page_content[:200]
         }
-        for doc in result["source_documents"]
+        for doc in docs
     ]
 
     return {
-        "answer": result["result"],
+        "answer": result.content if hasattr(result, "content") else str(result),
         "sources": sources
     }

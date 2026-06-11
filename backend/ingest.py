@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from gemini import get_embeddings
+from llm_client import get_embeddings
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
