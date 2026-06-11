@@ -39,7 +39,14 @@ async def upload_paper(file: UploadFile = File(...)):
         "chunks_indexed": num_chunks
     }
 
+from database import save_conversation, get_history
+
 @app.post("/ask")
 async def ask_question(paper_id: str = Form(...), question: str = Form(...)):
     result = get_answer(paper_id, question)
+    save_conversation(paper_id, question, result["answer"], result["sources"])
     return result
+
+@app.get("/history/{paper_id}")
+async def get_paper_history(paper_id: str):
+    return {"history": get_history(paper_id)}
