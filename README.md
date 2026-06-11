@@ -47,3 +47,5 @@ Open `http://localhost:5000`
 - Semantic vector search via FAISS
 - Source citations with page numbers per answer
 - Conversation history persisted in SQLite per paper
+
+![ScholarMind](image.png)
